@@ -8,4 +8,12 @@ export const texts = [
   "Text for typing #7",
 ];
 
+export const getRandomText = () => {
+  return texts[getRandomTextIndex()];
+}
+
+export const getRandomTextIndex = () => {
+  return Math.floor(Math.random() * texts.length);
+}
+
 export default { texts };

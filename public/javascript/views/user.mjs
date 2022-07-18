@@ -1,6 +1,16 @@
 import { addClass } from '../helpers/domHelper.mjs';
 import { createElement } from '../helpers/domHelper.mjs';
 
+const stringToBoolMap = {
+	'false': false,
+	'true': true
+}
+
+const boolToStringMap = {
+	false: 'false',
+	true: 'true'
+}
+
 const appendUserElement = ({ username, ready, isCurrentUser }) => {
 	const usersContainer = document.querySelector('#users-wrapper');
 
@@ -66,8 +76,67 @@ const setProgress = ({ username, progress }) => {
 	}
 };
 
-const removeUserElement = username => document.querySelector(`.user[data-username='${username}']`)?.remove();
+const removeUserElement = (username) => {
+	const userEl = document.querySelector(`.user[data-username='${username}']`);
+	if (userEl) {
+		userEl.remove();
+	}
+};
+
+const cleanUsersList = () => {
+	const userWrapper = document.getElementById('users-wrapper');
+	userWrapper.innerHTML = '';
+}
 
 const getReadySign = ready => (ready ? '🟢' : '🔴');
 
-export { appendUserElement, changeReadyStatus, setProgress, removeUserElement };
+const updateReadyStatus = (username) => {
+	const currentReadyEl = document.querySelector(
+		`div.ready-status[data-username=${username}]`
+	);
+	const readyValue = currentReadyEl.getAttribute('data-ready');
+	const newValue = !stringToBoolMap[readyValue];
+	currentReadyEl.innerHTML = getReadySign(newValue);
+	currentReadyEl.setAttribute('data-ready', boolToStringMap[newValue]);
+}
+
+const updateReadyBtnTextForCurrUser = (username) => {
+	const currentReadyEl = document.querySelector(
+		`div.ready-status[data-username=${username}]`
+	);
+	const readyValue = currentReadyEl.getAttribute('data-ready');
+	const btn = document.getElementById('ready-btn');
+	btn.innerText = stringToBoolMap[readyValue] ? 'NOT READY': 'READY';
+}
+
+const getReadyStatus = (username) => {
+	const currentReadyEl = document.querySelector(
+		`div.ready-status[data-username=${username}]`
+	);
+	const readyValue = currentReadyEl.getAttribute('data-ready');
+	return stringToBoolMap[readyValue];
+}
+
+const resetUsers = () => {
+	const users = document.querySelectorAll('div.user[data-username]');
+	users.forEach((u) => {
+		const username = u.getAttribute('data-username');
+		const status = document.querySelector(`div.ready-status[data-username='${username}']`);
+		status.setAttribute('data-ready', 'false');
+		status.innerText = getReadySign(false);
+		const progress = document.querySelector(`div.user-progress[data-username='${username}']`);
+		progress.style.width = "0%";
+	})
+}
+
+export {
+	appendUserElement,
+	changeReadyStatus,
+	setProgress,
+	removeUserElement,
+	updateReadyStatus,
+	getReadyStatus,
+	cleanUsersList,
+	updateReadyBtnTextForCurrUser,
+	resetUsers
+};

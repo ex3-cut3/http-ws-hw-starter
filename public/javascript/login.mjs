@@ -9,14 +9,36 @@ const input = document.getElementById('username-input');
 
 const getInputValue = () => input.value;
 
-const onClickSubmitButton = () => {
+const onClickSubmitButton = async () => {
 	const inputValue = getInputValue();
 	if (!inputValue) {
+		return;
+	}
+	try {
+		await canLogin(inputValue);
+	} catch (e) {
+		alert(e.message);
 		return;
 	}
 	sessionStorage.setItem('username', inputValue);
 	window.location.replace('/game');
 };
+
+const canLogin = async (username) => {
+	const res = await fetch(
+		'/login/can-login',
+		{
+			method: 'POST',
+			headers: {'Content-Type': 'application/json'},
+			body: JSON.stringify({username: username})
+		}
+	);
+	const responseOk = res.ok;
+	const resDecoded = await res.json();
+	if (!responseOk) {
+		throw new Error(resDecoded.message);
+	}
+}
 
 const onKeyUp = ev => {
 	const enterKeyCode = 13;

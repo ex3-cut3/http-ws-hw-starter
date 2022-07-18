@@ -1,4 +1,6 @@
-export const createElement = ({ tagName, className, attributes = {}, innerElements = [] }) => {
+export const createElement = (
+	{ tagName, className, attributes = {}, innerElements = [] }
+) => {
 	const element = document.createElement(tagName);
 
 	if (className) {
