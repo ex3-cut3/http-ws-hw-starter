@@ -1,4 +1,4 @@
-import Comments from './commentsManager';
+import Comments from './commentsController';
 
 class Bot {
   private _commentsManager: Comments;

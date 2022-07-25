@@ -1,6 +1,6 @@
-import * as texts from './data/texts';
+import * as texts from './info/texts';
 import { Comment } from './models/comment';
-import CommentBuilder from './commentBuilder';
+import CommentCreator from './commentCreator';
 
 class CommentsFactory {        // factory - give template of the message
   public static readonly USER_GREETING_TYPE = 'user_greeting';
@@ -8,10 +8,10 @@ class CommentsFactory {        // factory - give template of the message
   public static readonly USER_LEFT_TYPE = 'user_left_type';
   public static readonly GAME_STARTS_TYPE = 'game_starts_type';
 
-  private _commentBuilder: CommentBuilder;
+  private _commentBuilder: CommentCreator;
 
   constructor() {
-    this._commentBuilder = new CommentBuilder();
+    this._commentBuilder = new CommentCreator();
   }
 
   public getRandomComment(itemType: string): Comment {

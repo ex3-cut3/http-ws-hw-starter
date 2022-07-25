@@ -1,6 +1,6 @@
 import Bot from './bot';
-import CommentsManager from './commentsManager';
-import CommentsTemplateProxy from './commentsTemplateProxy';
+import CommentsController from './commentsController';
+import CommentsProxy from './commentsProxy';
 import CommentsFactory from './commentsFactory';
 
 class BotFacade {           // facade - creates bot with all needed dependencies
@@ -11,9 +11,9 @@ class BotFacade {           // facade - creates bot with all needed dependencies
   }
 
   private getTextGenerator() {
-    return new CommentsManager(
+    return new CommentsController(
       new CommentsFactory(),
-      new CommentsTemplateProxy()
+      new CommentsProxy()
     );
   }
 }

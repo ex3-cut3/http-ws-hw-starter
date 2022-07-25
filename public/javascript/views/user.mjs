@@ -118,7 +118,7 @@ const getReadyStatus = (username) => {
 }
 
 const resetUsers = () => {
-	const users = document.querySelectorAll('div.user[data-username]');
+	const users = document.querySelectorAll('div.user[info-username]');
 	users.forEach((u) => {
 		const username = u.getAttribute('data-username');
 		const status = document.querySelector(`div.ready-status[data-username='${username}']`);
