@@ -1,6 +1,5 @@
 import { Server } from 'socket.io';
-import * as config from './config';
-import Storage from '../storage';
+import controller from '../controller';
 
 export default (io: Server) => {
 	io.on('connection', socket => {
@@ -8,10 +7,10 @@ export default (io: Server) => {
 		if (!username) {
 				throw new Error('Something went wrong');
 		}
-		Storage.addUser(<string>username);
+		controller.addUser(<string>username);
 
 		socket.on('disconnect', socket => {
-			Storage.removeUser(<string>username);
+			controller.removeUser(<string>username);
 		});
 	});
 };

@@ -53,7 +53,12 @@ const updateNumberOfUsersInRoom = ({ name, numberOfUsers }) => {
 
 const getNumberOfUsersString = numberOfUsers => `${numberOfUsers} connected`;
 
-const removeRoomElement = name => document.querySelector(`.room[data-room-name='${name}']`)?.remove();
+const removeRoomElement = name => {
+	const roomEl = document.querySelector(`.room[data-room-name='${name}']`);
+	if (roomEl) {
+		roomEl.remove();
+	}
+}
 
 const showRoomPage = () => {
 	const roomPage = document.getElementById('rooms-page');
@@ -106,12 +111,12 @@ const showQuitBtn = () => {
 	btn.classList.remove('display-none');
 }
 
-const displayTimer = () => {
+const displayTimerBeforeGame = () => {
 	const timerEl = document.getElementById('timer');
 	timerEl.classList.remove('display-none');
 }
 
-const hideTimer = () => {
+const hideTimerBeforeGame = () => {
 	const timerEl = document.getElementById('timer');
 	timerEl.classList.add('display-none');
 }
@@ -143,10 +148,26 @@ const hideGameTimer = () => {
 	timerEl.classList.add('display-none');
 }
 
+const updateGameTimer = (seconds) => {
+	const secondsEl = document.getElementById('game-timer-seconds');
+	secondsEl.innerText = seconds;
+}
+
+const timerBeforeGameStarted = () => {
+	hideReadyBtn();
+	hideQuitBtn();
+	displayTimerBeforeGame();
+}
+
+const updateTimerBeforeGame = (secondsToGame) => {
+	const timerBeforeGame = document.getElementById('timer');
+	timerBeforeGame.innerText = secondsToGame;
+}
+
 const startTimer = (secondsBeforeGame, gameDurationInSec, text) => {
 	hideReadyBtn();
 	hideQuitBtn();
-	displayTimer();
+	displayTimerBeforeGame();
 	let seconds = secondsBeforeGame;
 	const timerBeforeGame = document.getElementById('timer');
 	timerBeforeGame.innerText = seconds;
@@ -160,7 +181,7 @@ const startTimer = (secondsBeforeGame, gameDurationInSec, text) => {
 	return new Promise(function (resolve) {
 		setTimeout(() => {
 			clearInterval(timer);
-			hideTimer();
+			hideTimerBeforeGame();
 			displayText(text);
 			resolve({
 				text: text,
@@ -217,5 +238,10 @@ export {
 	underlineFirstLetter,
 	displayGameTimer,
 	hideGameTimer,
-	hideText
+	hideText,
+	displayText,
+	timerBeforeGameStarted,
+	updateTimerBeforeGame,
+	updateGameTimer,
+	hideTimerBeforeGame
 };

@@ -1,11 +1,23 @@
 import {
 	addBgForLetter,
-	appendRoomElement, clearRoomName,
-	clearRooms, displayGameTimer, getRoomName, hideGameTimer, hideText, removeRoomElement, saveRoomName,
-	setRoomName, showBtns,
+	appendRoomElement,
+	clearRoomName,
+	clearRooms,
+	displayGameTimer, displayText,
+	getRoomName,
+	hideGameTimer,
+	hideText,
+	hideTimerBeforeGame,
+	removeRoomElement,
+	saveRoomName,
+	setRoomName,
+	showBtns,
 	showRoomPage,
-	showRoomsPage, startTimer, underlineFirstLetter,
-	updateNumberOfUsersInRoom
+	showRoomsPage,
+	timerBeforeGameStarted,
+	underlineFirstLetter, updateGameTimer,
+	updateNumberOfUsersInRoom,
+	updateTimerBeforeGame
 } from "./views/room.mjs";
 import requestService from "./helpers/requestService.js";
 import {
@@ -104,12 +116,12 @@ const quitRoomHandler = async () => {
 }
 
 const onCreateRoom = async () => {
-	const roomName = prompt('Room name');
+	const roomName = prompt('Room name!');
 	if (!roomName) {
 		return;
 	}
 	try {
-		await requestService.createRoom(roomName)
+		await requestService.createRoom(roomName);
 	} catch (e) {
 		alert(e.message);
 		return;
@@ -119,8 +131,8 @@ const onCreateRoom = async () => {
 		numberOfUsers: 0,
 		onJoin: joinButtonHandler
 	});
-	await joinTheRoom(roomName);
 	roomsSocket.emit('room_created', { roomName: roomName });
+	await joinTheRoom(roomName);
 }
 
 (async function () {
@@ -136,7 +148,7 @@ roomsSocket.on('add_room', async (updateRoomsEvent) => {
 	});
 });
 
-roomsSocket.on('remove_room', async (removeRoomEv) => {
+roomsSocket.on('remove_room', (removeRoomEv) => {
 	removeRoomElement(removeRoomEv.roomName);
 });
 
@@ -163,18 +175,22 @@ roomsSocket.on('update_ready_status', ({ user }) => {
 	updateReadyStatus(user);
 });
 
-roomsSocket.on('start_timer', async (timerSettings) => {
-	const textId = timerSettings.textId;
-	const textResponse = await requestService.getTextById(textId);
-	const text = textResponse.text;
-	const res = startTimer(
-		timerSettings.timeToGame,
-		timerSettings.gameTime,
-		text
-	);
-	res.then(timerResponse => {
-		handleGame(timerResponse.text, timerResponse.gameDuration);
-	});
+roomsSocket.on('timer_before_game_started', () => {
+	timerBeforeGameStarted();
+});
+
+roomsSocket.on('update_timer_before_game', (evData) => {
+	updateTimerBeforeGame(evData.timeToGame);
+});
+
+roomsSocket.on('game_started', (ev) => {
+	hideTimerBeforeGame();
+	displayGameTimer();
+	handleGameNew(ev.text);
+});
+
+roomsSocket.on('update_game_timer', (ev) => {
+	updateGameTimer(ev.secondsToEnd);
 });
 
 roomsSocket.on('set_user_progress', (evData) => {
@@ -184,21 +200,8 @@ roomsSocket.on('set_user_progress', (evData) => {
 	});
 });
 
-const startGameTimer = (seconds) => {
-	displayGameTimer();
-	const secondsEl = document.getElementById('game-timer-seconds');
-	let secondsLeft = seconds;
-	secondsEl.innerText = secondsLeft;
-	return setInterval(
-		() => {
-			secondsLeft -= 1;
-			secondsEl.innerText = secondsLeft;
-		},
-		1000
-	);
-}
-
-const handleGame = (text, gameTime) => {
+const handleGameNew = (text) => {
+	displayText(text);
 	let currentPhrase = '';
 	let currentPosition = 0;
 	let currentProgress = 0;
@@ -218,30 +221,26 @@ const handleGame = (text, gameTime) => {
 			});
 		}
 	}
-	const gameTimerId = startGameTimer(gameTime);
 
-	const timeout = setTimeout(() => {
+	roomsSocket.on('game_finished_early', (evData) => {
+		document.removeEventListener('keydown', handlePress);
 		hideGameTimer();
 		hideText();
-		clearInterval(gameTimerId);
-		roomsSocket.emit('game_finished', getRoomName());
-	}, gameTime * 1000);
+		resultStage(evData.users);
+		roomsSocket.emit('game_finished_early');
+	});
 
-	roomsSocket.on('game_finished_early', (data) => {
-		clearTimeout(timeout);
-		clearInterval(gameTimerId);
+	roomsSocket.on('game_finished', (evData) => {
+		document.removeEventListener('keydown', handlePress);
+		console.log(evData);
 		hideGameTimer();
 		hideText();
-		resultStage(data.users)
-		document.removeEventListener('keyup', handlePress);
+		resultStage(evData.users);
+		// spent huge amount of time understanding why i receive +1 modal after the end of the game -_-
+		roomsSocket.removeAllListeners('game_finished');
 	});
 
-	roomsSocket.on('game_finished', (data) => {
-		resultStage(data.users)
-		document.removeEventListener('keyup', handlePress);
-	});
-
-	document.addEventListener('keyup', handlePress);
+	document.addEventListener('keydown', handlePress);
 }
 
 const resultStage = (users) => {

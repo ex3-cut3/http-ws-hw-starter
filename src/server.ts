@@ -23,5 +23,3 @@ socketGamePage(socketIo);
 httpServer.listen(PORT, () => {
   console.log(`Listen server on port ${PORT}`);
 });
-
-export default { app, httpServer };

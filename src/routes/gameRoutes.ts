@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import path from 'path';
 import { HTML_FILES_PATH } from '../config';
-import Storage from '../storage';
-import * as data from '../data';
+import controller from '../controller';
+import * as data from '../textController';
 
 const router = Router();
 
@@ -17,27 +17,27 @@ router.post('/rooms', (req, res) => {
 		res.status(422).json({'message': "Room name is required!"});
 		return;
 	}
-	if (Storage.roomExists(roomName)) {
+	if (controller.roomExists(roomName)) {
 		res.status(400).json({'message': "Room with such name is already exists!"});
 		return;
 	}
-	Storage.addRoom(roomName);
+	controller.addRoom(roomName);
 	res.status(200).json({ message: 'Room created!' });
 });
 
 router.get('/rooms/users/:room', (req, res) => {
 	const roomName = req.params.room;
-	const usersList = Storage.getUsersByRoom(roomName);
+	const usersList = controller.getUsersByRoom(roomName);
 	res.status(200).json({ users: usersList });
 });
 
 router.get('/rooms/can-join/:room', (req, res) => {
-	const canJoin = Storage.canJoinTheRoom(req.params.room);
+	const canJoin = controller.canJoinTheRoom(req.params.room);
 	res.status(200).json({ canJoin: canJoin });
 });
 
 router.get('/rooms', (req, res) => {
-	const roomsList = Storage.getAvailableRooms();
+	const roomsList = controller.getAvailableRooms();
 	res.status(200).json({
 		rooms: roomsList
 	});
