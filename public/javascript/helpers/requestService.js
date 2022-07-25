@@ -31,4 +31,7 @@ export default {
     async canJoin(roomName) {
         return await this.makeRequest('GET', `/game/rooms/can-join/${roomName}`);
     },
+    async getTextById(id) {
+        return await this.makeRequest('GET', `/game/texts/${id}`);
+    }
 }

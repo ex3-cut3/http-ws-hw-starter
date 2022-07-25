@@ -1,59 +1,61 @@
 import {Server} from 'socket.io';
-import controller from '../controller';
-import RoomCreated from '../models/roomCreated';
-import UpdateReadyStatus from '../models/updateReadyStatus';
+import Storage from '../data/storage';
+import RoomCreated from '../types/roomCreated';
+import UpdateReadyStatus from '../types/updateReadyStatus';
 import * as config from '../socket/config';
-import UserProgress from '../models/userProgress';
-import * as events from './eventsEnum';
-import { sendMessagesToAll, onLeaveRoom } from '../utils';
+import UserProgress from '../types/userProgress';
+import * as events from './events';
+import {sendMessagesToAll, onLeaveRoom, seconds} from '../helpers';
 import { handleGame } from '../game';
+import { emitter } from '../bot/eventsHandler';
+import * as botEvents from '../bot/events';
 
 export default (io: Server) => {
   io.of('/rooms').on('connection', (socket) => {
     socket.on(events.ROOM_CREATED, (roomEvent: RoomCreated) => {
-      const room = controller.getRoomByName(roomEvent.roomName);
+      const room = Storage.getRoomByName(roomEvent.roomName);
       socket.broadcast.emit(events.ADD_ROOM, { roomData: room });
     });
 
     socket.on(events.JOIN_ROOM, (roomName: string) => {
       socket.join(roomName);
       const username: string = <string>socket.handshake.query.username;
-      controller.addUserToTheRoom(roomName, username);
-      const newCounter = controller.getCurrentCounter(roomName);
-      if (!controller.canJoinTheRoom(roomName)) {
+      Storage.addUserToTheRoom(roomName, username);
+      const newCounter = Storage.getCurrentCounter(roomName);
+      if (!Storage.canJoinTheRoom(roomName)) {
         socket.broadcast.emit(events.REMOVE_ROOM, { roomName: roomName });
       } else {
         socket.broadcast.emit(events.UPDATE_COUNTERS, { roomName: roomName, counter: newCounter });
       }
       socket.to(roomName).emit(events.ADD_USERS_LIST, { name: username, isReady: false});
+      emitter.emit(botEvents.USER_GREETING, { socket, username, roomName });
     });
 
     socket.on(events.LEFT_ROOM, (roomName: string) => {
       socket.leave(roomName);
-      console.log(controller.getRoomByName(roomName));
       const username: string = <string>socket.handshake.query.username;
-      controller.removeUserFromTheRoom(roomName, username);
-      if (controller.roomIsEmpty(roomName)) {
-        controller.removeRoom(roomName);
+      Storage.removeUserFromTheRoom(roomName, username);
+      if (Storage.roomIsEmpty(roomName)) {
+        Storage.removeRoom(roomName);
         socket.broadcast.emit(events.REMOVE_ROOM, { roomName: roomName });
       }
       if (
-        controller.roomExists(roomName)
+        Storage.roomExists(roomName)
         &&
-        controller.canJoinTheRoom(roomName)
+        Storage.canJoinTheRoom(roomName)
         &&
-        controller.hasOneFreePlace(roomName)
+        Storage.hasOneFreePlace(roomName)
       ) {
-        socket.broadcast.emit(events.ADD_ROOM, { roomData: controller.getRoomByName(roomName)});
+        socket.broadcast.emit(events.ADD_ROOM, { roomData: Storage.getRoomByName(roomName)});
       }
-      if (controller.roomExists(roomName)) {
+      if (Storage.roomExists(roomName)) {
+        emitter.emit(botEvents.USER_LEFT, { socket, username, roomName});
         onLeaveRoom(socket, roomName);
       }
-      console.log(controller.getRoomByName(roomName));
     });
 
     socket.on(events.UPDATE_READY_STATUS, (eventData: UpdateReadyStatus) => {
-        controller.updateUserReadyStatus(
+        Storage.updateUserReadyStatus(
           eventData.roomName,
           eventData.user,
           eventData.value
@@ -63,18 +65,22 @@ export default (io: Server) => {
           ready: eventData.value
         });
         if (
-          controller.allUsersAreReady(eventData.roomName)
+          Storage.allUsersAreReady(eventData.roomName)
           &&
-          controller.usersInRoom(eventData.roomName) >= config.MINIMUM_USERS_FOR_ONE_ROOM
+          Storage.usersInRoom(eventData.roomName) >= config.MINIMUM_USERS_FOR_ONE_ROOM
         ) {
-          controller.markRoomInGame(eventData.roomName);
+          Storage.markRoomInGame(eventData.roomName);
           socket.broadcast.emit(events.REMOVE_ROOM, { roomName: eventData.roomName });
+          emitter.emit(botEvents.USERS_INTRODUCING, { socket, roomName: eventData.roomName });
+          setTimeout(() => {
+            emitter.emit(botEvents.GAME_STARTS_SOON, { socket, roomName: eventData.roomName})
+          }, seconds(config.SECONDS_TIMER_BEFORE_START_GAME / 2));
           handleGame(socket, eventData.roomName);
         }
     });
 
     socket.on(events.SET_USER_PROGRESS, (progressData: UserProgress) => {
-      controller.updateUserProgress(
+      Storage.updateUserProgress(
         progressData.roomName,
         progressData.user,
         progressData.progress
@@ -83,8 +89,8 @@ export default (io: Server) => {
         user: progressData.user,
         progress: progressData.progress
       });
-      if (controller.allUsersAreCompleted(progressData.roomName)) {
-        const users = controller.getFinishedUsersList(progressData.roomName);
+      if (Storage.allUsersAreCompleted(progressData.roomName)) {
+        const users = Storage.getFinishedUsersList(progressData.roomName);
         sendMessagesToAll(
           socket,
           events.GAME_FINISHED_EARLY,
@@ -93,7 +99,7 @@ export default (io: Server) => {
             users: users
           }
         );
-        controller.resetRoom(progressData.roomName);
+        Storage.resetRoom(progressData.roomName);
       }
     });
 
@@ -101,14 +107,14 @@ export default (io: Server) => {
       const rooms = socket.rooms;
       const username: string = <string>socket.handshake.query.username;
       rooms.forEach((roomName) => {
-        if (controller.roomExists(roomName)) {
-          controller.updateUserReadyStatus(
+        if (Storage.roomExists(roomName)) {
+          Storage.updateUserReadyStatus(
             roomName,
             username,
             false
           );
-          controller.removeUserFromTheRoom(roomName, username);
-          controller.removeUser(username);
+          Storage.removeUserFromTheRoom(roomName, username);
+          Storage.removeUser(username);
           onLeaveRoom(socket, roomName);
         }
       });

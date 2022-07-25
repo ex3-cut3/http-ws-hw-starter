@@ -1,0 +1,16 @@
+export const ADD_ROOM: string = 'add_room';
+export const REMOVE_ROOM: string = 'remove_room';
+export const ROOM_CREATED: string = 'room_created';
+export const JOIN_ROOM: string = 'join_room';
+export const LEFT_ROOM: string = 'left_room';
+export const UPDATE_COUNTERS: string = 'update_counters';
+export const UPDATE_READY_STATUS: string = 'update_ready_status';
+export const ADD_USERS_LIST: string = 'add_users_list';
+export const DELETE_USERS_LIST: string = 'delete_users_list';
+export const SET_USER_PROGRESS: string = 'set_user_progress';
+export const GAME_FINISHED: string = 'game_finished';
+export const GAME_FINISHED_EARLY: string = 'game_finished_early';
+export const UPDATE_TIMER_BEFORE_GAME: string = 'update_timer_before_game';
+export const GAME_STARTED: string = 'game_started';
+export const TIMER_BEFORE_GAME_STARTED: string = 'timer_before_game_started';
+export const UPDATE_GAME_TIMER: string = 'update_game_timer';

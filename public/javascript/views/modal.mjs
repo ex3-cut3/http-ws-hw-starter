@@ -1,4 +1,4 @@
-import {createElement} from '../helpers/domHelper.mjs';
+import { createElement } from '../helpers/domHelper.mjs';
 
 const showInputModal = ({ title, onChange = () => {}, onSubmit = () => {} }) => {
 	const rootElement = document.querySelector('#root');
@@ -91,11 +91,13 @@ const createModalElement = title => {
 		innerElements: [title],
 	});
 
-	return createElement({
+	const modal = createElement({
 		tagName: 'div',
 		className: 'modal',
 		innerElements: [titleElement],
 	});
+
+	return modal;
 };
 
 const getFooter = children => {

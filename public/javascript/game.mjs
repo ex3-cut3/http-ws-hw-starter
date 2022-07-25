@@ -28,6 +28,7 @@ import {
 	updateReadyStatus
 } from "./views/user.mjs";
 import {showResultsModal} from "./views/modal.mjs";
+import Bot from "./bot/bot.js";
 
 const username = sessionStorage.getItem('username');
 
@@ -37,6 +38,10 @@ if (!username) {
 
 const socket = io('ws://localhost:3002', { query: { username } });
 
+const roomsSocket = io('/rooms', { query: { username } });
+
+const bot = new Bot(roomsSocket);
+
 const goToTheRoom = (roomName) => {
 	roomsSocket.emit('join_room', roomName);
 	showRoomPage(roomName);
@@ -44,6 +49,7 @@ const goToTheRoom = (roomName) => {
 	saveRoomName(roomName);
 	const roomQuitBtn = document.getElementById('quit-room-btn');
 	roomQuitBtn.addEventListener('click', quitRoomHandler);
+	bot.listenAll();
 }
 
 const readyBtnHandler = () => {
@@ -98,8 +104,6 @@ const initRooms = async () => {
 		})
 	}
 }
-
-const roomsSocket = io('/rooms', { query: { username } });
 
 const createRoomBtn = document.getElementById('add-room-btn');
 

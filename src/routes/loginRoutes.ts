@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import path from 'path';
 import { HTML_FILES_PATH } from '../config';
-import controller from '../controller';
+import Storage from '../data/storage';
 
 const router = Router();
 
@@ -16,7 +16,7 @@ router.post('/can-login', (req, res) => {
 		res.status(422).json({'message': "username is required!"});
 		return;
 	}
-	if (controller.userExists(username)) {
+	if (Storage.userExists(username)) {
 		res.status(400).json({'message': "User with such username is already active!"});
 		return;
 	}

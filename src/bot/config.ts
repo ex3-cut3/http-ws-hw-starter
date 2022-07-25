@@ -1,0 +1,1 @@
+export const STATE_PERIOD_CHECK_SEC = 2;

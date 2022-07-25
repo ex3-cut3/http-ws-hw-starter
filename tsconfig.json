@@ -11,11 +11,7 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitAny": false,
-    "skipLibCheck": true,
-    "lib": [
-      "es2016",
-      "dom"
-    ],
+    "skipLibCheck": true
   },
   "include": [
     "./src/**/*"
